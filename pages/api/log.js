@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     const r = await fetch("https://api.notion.com/v1/pages", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.NOTION_TOKEN}`,
+        "Authorization": `Bearer ${process.env.raela_notion_key}`,
         "Content-Type": "application/json",
         "Notion-Version": "2022-06-28",
       },
