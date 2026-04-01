@@ -20,6 +20,9 @@ export default function Home() {
   const [chips, setChips] = useState(true)
   const [session] = useState(genSession)
   const [stats, setStats] = useState({ total: 0, approved: 0, todayCount: 0, contributors: 0 })
+  const [email, setEmail] = useState("")
+  const [subStatus, setSubStatus] = useState("")
+  const [subLoading, setSubLoading] = useState(false)
   const msgsRef = useRef(null)
   const taRef = useRef(null)
   useEffect(() => {
@@ -61,6 +64,29 @@ export default function Home() {
       setMsgs(prev => [...prev, { role: "assistant", content: "Connection issue. Try again." }])
     } finally {
       setLoading(false)
+    }
+  }
+  async function subscribe(e) {
+    e.preventDefault()
+    if (!email || !email.includes("@")) return
+    setSubLoading(true)
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "ARIA Site" })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setSubStatus("success")
+        setEmail("")
+      } else {
+        setSubStatus("error")
+      }
+    } catch {
+      setSubStatus("error")
+    } finally {
+      setSubLoading(false)
     }
   }
   function onKey(e) {
@@ -145,6 +171,13 @@ export default function Home() {
     cta: { background:"#0C1A2E", borderRadius:14, padding:"1.25rem", border:"none" },
     ctap: { fontSize:13, color:"rgba(255,255,255,0.55)", lineHeight:1.55, margin:"0.5rem 0 1rem" },
     ctab: { display:"block", width:"100%", padding:10, background:"#C9A84C", color:"#0C1A2E", fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", border:"none", borderRadius:7, cursor:"pointer", textDecoration:"none", textAlign:"center" },
+    subCard: { background:"#fff", border:"1px solid rgba(12,26,46,0.09)", borderRadius:14, padding:"1.25rem" },
+    subTitle: { fontSize:10, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase", color:"#94A3B8", marginBottom:"0.5rem" },
+    subBody: { fontSize:13, color:"#475569", lineHeight:1.5, marginBottom:"1rem" },
+    subInput: { width:"100%", border:"1px solid #E2DAC8", borderRadius:8, padding:"9px 12px", fontSize:13, fontFamily:"'Jost',sans-serif", color:"#0C1A2E", background:"#F8F5EF", outline:"none", marginBottom:8 },
+    subBtn: { width:"100%", padding:"9px", background:"#0C1A2E", color:"#C9A84C", fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", border:"none", borderRadius:7, cursor:"pointer" },
+    subSuccess: { fontSize:13, color:"#2D9B6F", textAlign:"center", padding:"8px 0" },
+    subError: { fontSize:13, color:"#E24B4A", textAlign:"center", padding:"8px 0" },
     footer: { borderTop:"1px solid rgba(12,26,46,0.09)", padding:"1.5rem 2.5rem", display:"flex", justifyContent:"space-between", alignItems:"center", maxWidth:1400, margin:"0 auto", width:"100%" },
     fbrand: { fontFamily:"'Cormorant Garamond',serif", fontSize:18, fontWeight:600, color:"#0C1A2E", letterSpacing:"-0.01em" },
     flinks: { display:"flex", gap:24 },
@@ -168,7 +201,6 @@ export default function Home() {
         </div>
       </nav>
       <div style={s.page}>
-        {/* DARK HEADER — wording + stats at top */}
         <div style={s.header}>
           <div style={s.headerInner}>
             <div>
@@ -192,7 +224,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-        {/* MAIN CHAT LAYOUT */}
         <div style={s.main}>
           <div style={s.chat}>
             <div style={s.ctop}>
@@ -257,6 +288,28 @@ export default function Home() {
             </div>
           </div>
           <div style={s.sb}>
+            <div style={s.subCard}>
+              <h4 style={s.subTitle}>Stay in the loop</h4>
+              <p style={s.subBody}>Get updates on ARIA&apos;s training progress and early access to every YMMH launch.</p>
+              {subStatus === "success" ? (
+                <div style={s.subSuccess}>You&apos;re in. Welcome to the community.</div>
+              ) : (
+                <form onSubmit={subscribe}>
+                  <input
+                    style={s.subInput}
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                  />
+                  <button style={s.subBtn} type="submit" disabled={subLoading}>
+                    {subLoading ? "Subscribing..." : "Subscribe"}
+                  </button>
+                  {subStatus === "error" && <div style={s.subError}>Something went wrong. Try again.</div>}
+                </form>
+              )}
+            </div>
             <div style={s.scard}>
               <h4 style={s.sh4}>Live stats</h4>
               {[
@@ -306,6 +359,7 @@ export default function Home() {
         @keyframes breathe { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.45;transform:scale(.75)} }
         @keyframes tdot { 0%,60%,100%{transform:translateY(0);opacity:.35} 30%{transform:translateY(-4px);opacity:1} }
         textarea:focus{outline:none}
+        input:focus{outline:none;border-color:rgba(201,168,76,0.5)!important;background:#fff!important}
         button:disabled{opacity:.5;cursor:not-allowed}
       `}</style>
     </>
