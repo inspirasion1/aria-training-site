@@ -1,0 +1,11 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #0C1A2E; --navy-2: #162340; --navy-3: #1F304F;
+  --gold: #C9A84C; --gold-2: #E0C068; --gold-3: #8B6914;
+  --gold-pale: rgba(201,168,76,0.08); --gold-border: rgba(201,168,76,0.25);
+  --cream: #F8F5EF; --cream-2: #EEE9DF; --cream-3: #E2DAC8;
+  --white: #FFFFFF; --text: #0C1A2E; --text-mid: #475569;
+  --text-light: #94A3B8; --green: #2D9B6F; --border: rgba(12,26,46,0.09);
+}
+html { font-size: 16px; scroll-behavior: smooth; }
+body { font-family: "Jost", sans-serif; font-weight: 400; background: var(--cream); color: var(--text); min-height: 100vh; }
