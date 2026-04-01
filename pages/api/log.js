@@ -23,7 +23,11 @@ export default async function handler(req, res) {
         }
       })
     })
-    if (!r.ok) return res.status(500).json({ error: "Notion error" })
+    const result = await r.json()
+    if (!r.ok) {
+      console.error("Notion error:", JSON.stringify(result))
+      return res.status(500).json({ error: "Notion error", detail: result })
+    }
     res.status(200).json({ success: true })
   } catch (e) {
     console.error(e)
