@@ -19,11 +19,17 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [chips, setChips] = useState(true)
   const [session] = useState(genSession)
+  const [stats, setStats] = useState({ total: 0, approved: 0, todayCount: 0, contributors: 0 })
   const msgsRef = useRef(null)
   const taRef = useRef(null)
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight
   }, [msgs, loading])
+  useEffect(() => {
+    fetch("/api/stats").then(r => r.json()).then(data => {
+      if (data && !data.error) setStats(data)
+    }).catch(console.error)
+  }, [])
   async function send(text) {
     const msg = text || input.trim()
     if (!msg || loading) return
@@ -46,6 +52,10 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userMessage: msg, ariResponse: reply, sessionId: session })
+      }).then(() => {
+        fetch("/api/stats").then(r => r.json()).then(data => {
+          if (data && !data.error) setStats(data)
+        }).catch(console.error)
       }).catch(console.error)
     } catch (e) {
       setMsgs(prev => [...prev, { role: "assistant", content: "Connection issue. Try again." }])
@@ -102,8 +112,8 @@ export default function Home() {
     ameta: { fontSize:11, color:"#94A3B8" },
     tflag: { fontSize:10, fontWeight:500, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8B6914", background:"rgba(201,168,76,0.08)", border:"1px solid rgba(201,168,76,0.25)", borderRadius:4, padding:"5px 10px" },
     msgs: { padding:"1.5rem", minHeight:420, maxHeight:500, overflowY:"auto", display:"flex", flexDirection:"column", gap:18 },
-    mw: { display:"flex", gap:10 },
-    mwu: { display:"flex", gap:10, flexDirection:"row-reverse" },
+    msgWrap: { display:"flex", gap:10 },
+    msgWrapU: { display:"flex", gap:10, flexDirection:"row-reverse" },
     morb: { width:28, height:28, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", marginTop:3 },
     morbl: { fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", color:"#C9A84C", fontSize:13 },
     mbody: { maxWidth:"78%" },
@@ -138,10 +148,6 @@ export default function Home() {
     bsl: { fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", color:"#C9A84C", fontSize:14 },
     bt: { fontSize:13, fontWeight:500, color:"#0C1A2E", lineHeight:1.2 },
     bsub: { fontSize:11, color:"#94A3B8" },
-    lbr: { display:"flex", alignItems:"center", gap:10, padding:"7px 0", borderBottom:"1px solid rgba(12,26,46,0.09)", fontSize:13 },
-    lbn: { width:16, fontSize:11, color:"#94A3B8", fontWeight:500 },
-    lbname: { flex:1, color:"#0C1A2E" },
-    lbct: { fontSize:12, fontWeight:500, color:"#8B6914" },
     cta: { background:"#0C1A2E", borderRadius:14, padding:"1.25rem", border:"none" },
     ctap: { fontSize:13, color:"rgba(255,255,255,0.55)", lineHeight:1.55, margin:"0.5rem 0 1rem" },
     ctab: { display:"block", width:"100%", padding:10, background:"#C9A84C", color:"#0C1A2E", fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", border:"none", borderRadius:7, cursor:"pointer", textDecoration:"none", textAlign:"center" },
@@ -154,7 +160,7 @@ export default function Home() {
     <>
       <Head>
         <title>YMMH — Train ARIA</title>
-        <meta name="description" content="Help train an intelligence from the ground up." />
+        <meta name="description" content="Help train an intelligence from the ground up. Young's Multimedia Holdings community training initiative." />
       </Head>
       <nav style={s.nav}>
         <a href="#" style={s.brand}>
@@ -181,11 +187,16 @@ export default function Home() {
           <div style={s.scey}>Live training metrics</div>
           <div style={s.sch}>ARIA is learning from every conversation in real time</div>
           <div style={s.scg}>
-            {[{v:"18,822",l:"approved pairs"},{v:"1,842",l:"contributors"},{v:"247",l:"chats today"},{v:"Epoch 1",l:"training stage"}].map((x,i)=>(
+            {[
+              {v: stats.total.toLocaleString(), l:"total conversations"},
+              {v: stats.approved.toLocaleString(), l:"approved pairs"},
+              {v: stats.todayCount.toLocaleString(), l:"chats today"},
+              {v: stats.contributors.toLocaleString(), l:"contributors"},
+            ].map((x,i)=>(
               <div key={i} style={s.scs}><div style={s.scv}>{x.v}</div><div style={s.scl}>{x.l}</div></div>
             ))}
           </div>
-          <div style={s.scpr}><span>Epoch progress</span><span>41%</span></div>
+          <div style={s.scpr}><span>Training status</span><span>Active</span></div>
           <div style={s.scbar}><div style={s.scfill}></div></div>
         </div>
       </section>
@@ -207,7 +218,7 @@ export default function Home() {
           </div>
           <div style={s.msgs} ref={msgsRef}>
             {msgs.map((m,i)=>(
-              <div key={i} style={m.role==="user" ? s.mwu : s.mw}>
+              <div key={i} style={m.role==="user" ? s.msgWrapU : s.msgWrap}>
                 {m.role==="assistant"
                   ? <div style={{...s.morb,background:"#0C1A2E"}}><span style={s.morbl}>A</span></div>
                   : <div style={{...s.morb,background:"#EEE9DF",border:"1px solid #E2DAC8",fontSize:9,color:"#94A3B8",fontWeight:500,letterSpacing:"0.06em"}}>YOU</div>
@@ -219,7 +230,7 @@ export default function Home() {
               </div>
             ))}
             {loading && (
-              <div style={s.mw}>
+              <div style={s.msgWrap}>
                 <div style={{...s.morb,background:"#0C1A2E"}}><span style={s.morbl}>A</span></div>
                 <div style={s.mbody}>
                   <div style={s.mname}>ARIA</div>
@@ -256,37 +267,32 @@ export default function Home() {
         <div style={s.sb}>
           <div style={s.scard}>
             <h4 style={s.sh4}>Live stats</h4>
-            {[{k:"Approved pairs",v:"18,822",g:true},{k:"Contributors",v:"1,842"},{k:"Chats today",v:"247"},{k:"Training stage",v:"Epoch 1 of 3"}].map((r,i)=>(
-              <div key={i} style={s.slr}>
+            {[
+              {k:"Total conversations", v:stats.total.toLocaleString()},
+              {k:"Approved pairs", v:stats.approved.toLocaleString(), g:true},
+              {k:"Chats today", v:stats.todayCount.toLocaleString()},
+              {k:"Contributors", v:stats.contributors.toLocaleString()},
+            ].map((r,i)=>(
+              <div key={i} style={{...s.slr,...(i===3?{borderBottom:"none"}:{})}}>
                 <span style={s.slk}>{r.k}</span>
                 <span style={{...s.slv,...(r.g?{color:"#8B6914"}:{})}}>{r.v}</span>
               </div>
             ))}
-            <div style={s.pw}>
-              <div style={s.pl}><span>Epoch progress</span><span>41%</span></div>
-              <div style={s.pt}><div style={s.pf}></div></div>
-            </div>
           </div>
           <div style={s.scard}>
             <h4 style={s.sh4}>Founding badges</h4>
             <div style={s.bs}>
-              {[{l:"F",t:"Founding Trainer",s:"First 500 · Lifetime status"},{l:"E",t:"Early Access",s:"Priority at all YMMH launches"},{l:"C",t:"Origin Credit",s:"Named in ARIA's story"}].map((b,i)=>(
+              {[
+                {l:"F",t:"Founding Trainer",s:"First 500 · Lifetime status"},
+                {l:"E",t:"Early Access",s:"Priority at all YMMH launches"},
+                {l:"C",t:"Origin Credit",s:"Named in ARIA's story"},
+              ].map((b,i)=>(
                 <div key={i} style={s.br}>
                   <div style={s.bsq}><span style={s.bsl}>{b.l}</span></div>
                   <div><div style={s.bt}>{b.t}</div><div style={s.bsub}>{b.s}</div></div>
                 </div>
               ))}
             </div>
-          </div>
-          <div style={s.scard}>
-            <h4 style={s.sh4}>Top contributors</h4>
-            {[{n:1,name:"Marcus T.",ct:"312 pairs"},{n:2,name:"Priya R.",ct:"287 pairs"},{n:3,name:"DeShawn W.",ct:"241 pairs"},{n:4,name:"Lena M.",ct:"198 pairs"},{n:5,name:"You — start now",ct:"—",you:true}].map((r,i)=>(
-              <div key={i} style={s.lbr}>
-                <span style={s.lbn}>{r.n}</span>
-                <span style={{...s.lbname,...(r.you?{color:"#94A3B8",fontStyle:"italic"}:{})}}>{r.name}</span>
-                <span style={s.lbct}>{r.ct}</span>
-              </div>
-            ))}
           </div>
           <div style={s.cta}>
             <h4 style={{...s.sh4,color:"#C9A84C"}}>Founding trainers</h4>
@@ -308,12 +314,6 @@ export default function Home() {
         @keyframes tdot { 0%,60%,100%{transform:translateY(0);opacity:.35} 30%{transform:translateY(-4px);opacity:1} }
         textarea:focus{outline:none}
         button:disabled{opacity:.5;cursor:not-allowed}
-        @media(max-width:860px){
-          .hero-grid{grid-template-columns:1fr!important}
-          .main-grid{grid-template-columns:1fr!important}
-          .sc-right{display:none!important}
-          .sidebar{display:none!important}
-        }
       `}</style>
     </>
   )
